@@ -18,7 +18,7 @@ public class Visualizer extends PApplet{
 //    public static AudioInput player;
     public static FFT fft;
 
-    private static float smoothing = 0.75f;
+    private static float smoothing = 0.83f;
     public  static float[] fftSmooth;
     public  static int avgSize;
 
@@ -31,21 +31,21 @@ public class Visualizer extends PApplet{
     private int skip = 5 * 1000;
     private float cAmplitude = 90;
     private float ellipseR = 0;
-    private float starKick = 69.0f;
-    private float r = 165;
-    private static float strokeWeight = 2.4f;
+    private float starKick = 80.0f;
+    private float r = 170.0f;
+    private static float strokeWeight = 2.6f;
     private static float widthstepincrement = .1f;
     private static int amplitude = 1;
     private static int barStep = 1;
     private int buffersize = 2048 / 2;
-    private float angOffset = 3;
+    private float angOffset = 2.10f;
     public static float a = 0;
-    public Star[] stars = new Star[265];
+    public Star[] stars = new Star[365];
 
     public float speed = 1;
     // /media/caleb/OS/Users/Caleb/Downloads
 
-    private int visualMode = 3;
+    private int visualMode = 0;
 
     private static String iconImage = "logo3.png";
     public static Image icon = Toolkit.getDefaultToolkit().getImage(Visualizer.class.getResource("/" + iconImage));
@@ -80,22 +80,20 @@ public class Visualizer extends PApplet{
         surface.setFrameRate(120);
         surface.setIcon(loadImage(iconImage));
 //        smooth();
-        //strokeCap(SQUARE);
+        strokeCap(SQUARE);
     }
 
     public void settings() {
         size(1105, 860, JAVA2D);
-//        PJOGL.setIcon("enginelogo.png");
         minim = new Minim(this);
         setUpPlayer();
         setUpBackGround();
-//        smooth(12);
     }
 
     private void setUpPlayer() {
         player = minim.loadFile(fileChooser(music), buffersize);
-//        player = minim.getLineIn();
-//        player = minim.loadFile((music), 2048);
+        //player = minim.getLineIn();
+        //player = minim.loadFile((music), 2048);
         fft = new FFT(player.bufferSize(), player.sampleRate());
         fft.logAverages(2000, 200);
         avgSize = fft.avgSize();
