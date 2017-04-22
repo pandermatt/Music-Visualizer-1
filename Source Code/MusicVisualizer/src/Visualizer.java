@@ -114,7 +114,7 @@ public class Visualizer extends PApplet{
         ellipseR = constrain(cAmplitude * 3.7f, 0, (r * 3) - 50);
         speed = map(ellipseR, 0, r * 2 - 50, .1f, 6.2f);
         visualize();
-        EException.setText(isSongOver()+"");
+        //EException.setText(isSongOver()+"");
         //songEnded();
     }
 
