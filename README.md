@@ -1,2 +1,3 @@
-# Music-Visualizer
-A unique and visually appealing audio visualizer made in Java with the use of Processing !
+![](Resources/logo2.png?raw=true "MVisualizer Logo")
+## Synopsis
+A Unique and Visually Appealing Audio Visualizer, to add some extra kick to your tunes !
