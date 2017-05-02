@@ -1,9 +1,7 @@
-import ddf.minim.AudioInput;
 import ddf.minim.AudioPlayer;
 import ddf.minim.Minim;
 import ddf.minim.analysis.FFT;
 import processing.core.PApplet;
-import processing.core.PVector;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -12,19 +10,19 @@ import java.awt.event.KeyEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Visualizer extends PApplet{
+public class Visualizer extends PApplet {
     public static Minim minim;
     public static AudioPlayer player;
-//    public static AudioInput player;
+    //public static AudioInput player;
     public static FFT fft;
 
-    private static float smoothing = 0.83f;
-    public  static float[] fftSmooth;
-    public  static int avgSize;
+    private static float smoothing = 0.80f;
+    public static float[] fftSmooth;
+    public static int avgSize;
 
     private float minVal = 0.0f, maxVal = 0.0f;
     private boolean firstMinDone = false;
-    public  static boolean keyDown;
+    public static boolean keyDown;
     private static boolean showText = true;
     private static boolean isPaused = false;
 
@@ -32,16 +30,15 @@ public class Visualizer extends PApplet{
     private float cAmplitude = 90;
     private float ellipseR = 0;
     private float starKick = 80.0f;
-    private float r = 170.0f;
+    private float r = 150.0f;
     private static float strokeWeight = 2.6f;
     private static float widthstepincrement = .1f;
     private static int amplitude = 1;
     private static int barStep = 1;
-    private int buffersize = 2048 / 2;
+    private int buffersize = 512;
+//    private int buffersize = 2048 / 2;
     private float angOffset = 2.10f;
     public static float a = 0;
-    public Star[] stars = new Star[365];
-
     public float speed = 1;
     // /media/caleb/OS/Users/Caleb/Downloads
 
@@ -73,21 +70,32 @@ public class Visualizer extends PApplet{
             "Ctrl+Alt: Exception Log"
     };
 
-    public static void main(String[] args) {PApplet.main(Visualizer.class);}
+    static {
+        System.setProperty("sun.java2d.transaccel", "True");
+        System.setProperty("sun.java2d.ddforcevram", "True");
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.macos.use-file-dialog-packages", "true");
+        System.setProperty("apple.awt.fileDialogForDirectories", "true");
+    }
+
+    public static void main(String[] args) {
+        PApplet.main(Visualizer.class);
+    }
 
     public void setup() {
         surface.setResizable(true);
         surface.setFrameRate(120);
         surface.setIcon(loadImage(iconImage));
-//        smooth();
+        smooth();
         strokeCap(SQUARE);
+        //rectMode(CENTER);
+        noiseDetail(1, 0.95f);
     }
 
     public void settings() {
-        size(1105, 860, JAVA2D);
+        size(1080, 720, JAVA2D);
         minim = new Minim(this);
         setUpPlayer();
-        setUpBackGround();
     }
 
     private void setUpPlayer() {
@@ -95,18 +103,18 @@ public class Visualizer extends PApplet{
         //player = minim.getLineIn();
         //player = minim.loadFile((music), 2048);
         fft = new FFT(player.bufferSize(), player.sampleRate());
-        fft.logAverages(2000, 200);
+        fft.logAverages(3000, 200);
         avgSize = fft.avgSize();
         fftSmooth = new float[avgSize];
         player.play();
     }
 
-    public void draw(){
+    public void draw() {
         background(0);
         EException.update();
         fft.forward(player.mix);
+        showBackGround(20);
         displayInstructions();
-        showBackGround();
         showSongTime();
         cAmplitude = lerp(cAmplitude, ((smoothing) * fft.calcAvg(minVal, maxVal) * 1), .1f);
         ellipseR = constrain(cAmplitude * 3.7f, 0, (r * 3) - 50);
@@ -116,41 +124,58 @@ public class Visualizer extends PApplet{
         //songEnded();
     }
 
-    public boolean isSongOver(){
+    public boolean isSongOver() {
         return (!isPaused && (player.right.level() <= 0 && player.left.level() <= 0));
     }
 
-    public void songEnded(){
+    public void songEnded() {
         if (player != null)
             EException.setText(player.position() + " (" + player.left.level() + " - " + player.right.level() + ") " + player.isPlaying());
-        /*if (!isPaused) {
-        }*/
     }
 
-    private void visualize(){
+    private void visualize() {
         switch (visualMode) {
-            case 0: circulerPulse(); break;
-            case 1: signal(); break;
-            case 2: inverse(); break;
-            case 3 : functionMusic(); break;
-            default: break;
+            case 0:
+                circulerPulse();
+                break;
+            case 1:
+                signal();
+                break;
+            case 2:
+                inverse();
+                break;
+            case 3:
+                functionMusic();
+                break;
+            default:
+                break;
         }
     }
 
-    private float dB(float x) {return (x == 0) ? 0 : 10 * (float) Math.log10(x);}
+    private float dB(float x) {
+        return (x == 0) ? 0 : 10 * (float) Math.log10(x);
+    }
 
     private void smoothPulse(boolean useDB) {
         for (int i = 0; i < avgSize; i++) {
             // Get spectrum value (using dB conversion or not, as desired)
             float fftCurr;
-            if (useDB) {fftCurr = dB(fft.getAvg(i));} else {fftCurr = fft.getAvg(i);}
+            if (useDB) {
+                fftCurr = dB(fft.getAvg(i));
+            } else {
+                fftCurr = fft.getAvg(i);
+            }
 
             // Smooth using exponential moving average
             fftSmooth[i] = (smoothing) * fftSmooth[i] + ((1 - smoothing) * fftCurr);
 
             // Find max and min values ever displayed across whole spectrum
-            if (fftSmooth[i] > maxVal) {maxVal = fftSmooth[i];}
-            if (!firstMinDone || (fftSmooth[i] < minVal)) {minVal = fftSmooth[i];}
+            if (fftSmooth[i] > maxVal) {
+                maxVal = fftSmooth[i];
+            }
+            if (!firstMinDone || (fftSmooth[i] < minVal)) {
+                minVal = fftSmooth[i];
+            }
         }
     }
 
@@ -231,7 +256,7 @@ public class Visualizer extends PApplet{
         }
     }
 
-    public void functionMusic(){
+    public void functionMusic() {
         final float maxHeight = (height / 2) * 0.75f;
         smoothPulse(false);
 
@@ -252,15 +277,15 @@ public class Visualizer extends PApplet{
             strokeWeight(strokeWeight);
             line(1.7f * x1, y1 + amp, 1.7f * x2, y2 - amp);
         }
-        a += 0.025f;
+        a += 0.015f;
     }
 
     public float musicTransform(float x) {
-        float m = 2, a = 325;
-        return (float) ((m * (x - a) * Math.signum(a - x) + m * a) - height / 2 + (60 * Math.sin(.08f * x + Visualizer.a))); // Triangle Function: http://math.stackexchange.com/questions/544559/is-there-any-equation-for-triangle
-//        return (float) (75f * Math.sin(.015 * x + a));
-//        return 20f * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(.04f * x))))))));
-//        return (float) Math.pow(.02 * x, 2);
+        //float m = 2, a = 325;
+        //return (float) ((m * (x - a) * Math.signum(a - x) + m * a) - height / 2 + (60 * Math.sin(.08f * x + Visualizer.a))); // Triangle Function: http://math.stackexchange.com/questions/544559/is-there-any-equation-for-triangle
+        return (float) (75f * Math.sin(.015 * x + a));
+        //return 20f * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(.04f * x))))))));
+        //return (float) Math.pow(.02 * x, 2);
     }
 
     private void displayInstructions() {
@@ -272,7 +297,10 @@ public class Visualizer extends PApplet{
                     + "   StarKick: " + String.format("%.2f", starKick), 5, 32);
 
             int starty = 56, spacing = 18 /*Pixels*/;
-            for (int i = 0; i < instructions.length; i++) {text(instructions[i], 5, starty); starty += spacing;}
+            for (int i = 0; i < instructions.length; i++) {
+                text(instructions[i], 5, starty);
+                starty += spacing;
+            }
         }
     }
 
@@ -284,36 +312,51 @@ public class Visualizer extends PApplet{
             colorMode(HSB);
             fill(map(player.position(), 0, player.length(), 0, 255), 255, 255);
             rect(0, 0, posx, 12);
-        } catch (Exception e){EException.append(e);}
+        } catch (Exception e) {
+            EException.append(e);
+        }
     }
 
     private String fileChooser(String if_null) {
-        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x){EException.append(x);}
+        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) {EException.append(x);}
         JFileChooser chooser = new JFileChooser(System.getProperty("user.home") + "/Downloads");
         JFrame window = new JFrame();
         window.setIconImage(icon);
         chooser.setDialogTitle("Choose a song :D");
         chooser.setFileFilter(new FileNameExtensionFilter(".wav, .mp3", "wav", "mp3"));
         int returnVal = chooser.showOpenDialog(window);
-        if(returnVal == JFileChooser.APPROVE_OPTION) {return chooser.getSelectedFile().getAbsolutePath();
+        if (returnVal == JFileChooser.APPROVE_OPTION) {return chooser.getSelectedFile().getAbsolutePath();
         } else return if_null;
     }
 
-    private void setUpBackGround() {
-        for (int i = 0; i < stars.length; i++) {stars[i] = new Star();}
-    }
-    private void showBackGround() {
-        for (int i = 0; i < stars.length; i++) {stars[i].update(); stars[i].show(4, 0);}
+    private void showBackGround(int step) {
+        for (int x = step; x < width; x += step) {
+            for (int y = step; y < height; y += step) {
+                float n = noise((float) (x * 0.005), (float) (y * 0.007), (float) (frameCount * 0.06));
+                pushMatrix();
+                translate(x, y);
+                rotate(TWO_PI * n);
+                scale(map(ellipseR, 0, (r * 2) - 30, 0, 15) * n);
+                strokeWeight(.2f);
+                stroke(map(n, 0, Float.POSITIVE_INFINITY, 0, 255));
+                fill(255);
+                rect(0, 0, .8f, .4f);
+                popMatrix();
+            }
+        }
     }
 
-    public void mouseReleased(){
-        try {player.cue(((int) map(mouseX, 0, width, 0, player.length())));
-        } catch (Exception e){EException.append(e);}
+    public void mouseReleased() {
+        try {
+            player.cue(((int) map(mouseX, 0, width, 0, player.length())));
+        } catch (Exception e) {EException.append(e);}
     }
 
-    private boolean toggle(boolean t) {return !t;}
+    private boolean toggle(boolean t) {
+        return !t;
+    }
 
-    public void keyPressed(){
+    public void keyPressed() {
         float inc = 0.01f;
         keyDown = true;
 
@@ -344,12 +387,17 @@ public class Visualizer extends PApplet{
             if (starKick <= 1) starKick = 1;
         }
 
-        if(key == 'd'){
+        if (key == 'd') {
             player.skip(skip);
         }
 
-        if(key == 'a'){
+        if (key == 'a') {
             player.skip(-skip);
+        }
+
+        if (key == 'm') {
+            if (player.isMuted()) player.unmute();
+            else player.mute();
         }
 
         if (key == 'w') {
@@ -361,11 +409,11 @@ public class Visualizer extends PApplet{
             if (r <= 0) r = 1;
         }
 
-        if (key == 'z'){
+        if (key == 'z') {
             showText = toggle(showText);
         }
 
-        if (key == 'x'){
+        if (key == 'x') {
             visualMode++;
             if (visualMode > 3) visualMode = 0;
         }
@@ -390,15 +438,19 @@ public class Visualizer extends PApplet{
             barStep += 1;
         }
 
-        if(keyCode == KeyEvent.VK_SPACE){
-            if (player.isPlaying()) {player.pause(); isPaused = true;}
-            else {player.play(); isPaused=false;}
+        if (keyCode == KeyEvent.VK_SPACE) {
+            if (player.isPlaying()) {
+                player.pause();
+                isPaused = true;
+            } else {
+                player.play();
+                isPaused = false;
+            }
         }
 
-        if(key == '4' && smoothing < 1 - inc) smoothing += inc;
-        if(key == '3' && smoothing > inc) smoothing -= inc;
+        if (key == '4' && smoothing < 1 - inc) smoothing += inc;
+        if (key == '3' && smoothing > inc) smoothing -= inc;
     }
-
 
 
     public void keyReleased() {
@@ -410,50 +462,11 @@ public class Visualizer extends PApplet{
                 player.pause();
                 player = minim.loadFile(filePath, buffersize);
                 fft = new FFT(player.bufferSize(), player.sampleRate());
-                fft.logAverages(2000, 200);
+                fft.logAverages(3000, 200);
                 avgSize = fft.avgSize();
                 fftSmooth = new float[avgSize];
                 player.play();
             }
-        }
-    }
-
-    private class Star {
-        public float x;
-        public float y;
-        public float z;
-        //public float pz;
-
-        public Star() {
-            x = random(-width / 2, width / 2);
-            y = random(-height / 2, height / 2);
-            z = random(width / 2);
-            //pz = z;
-        }
-
-        public void update() {
-            z -= speed;
-
-            if (z <= 1) {
-                z = random(width / 2);
-                x = random(-width / 2, width / 2);
-                y = random(-height / 2, height / 2);
-                //pz = z;
-            }
-        }
-
-        public void show(float max, float min) {
-            float sx = map(x / z, 0, 1, 0, width / 2);
-            float sy = map(y / z, 0, 1, 0, height / 2);
-            float r = map(z, 0, width / 2, max, min);
-
-            fill(map(r, max, min, 255, 0));
-            noStroke();
-            float added = map(ellipseR, 0, r * 2 - 50, 0, 2 * PI);
-            //sx += starKick * cos(.015f );
-            sy += starKick * sin(.06f * added);
-            ellipse(sx + width / 2, sy + height / 2, r, r);
-            //pz = z;
         }
     }
 }
