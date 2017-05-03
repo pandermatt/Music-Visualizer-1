@@ -345,10 +345,10 @@ public class Visualizer extends PApplet {
                 pushMatrix();
                 translate(x, y);
                 rotate(TWO_PI * n);
-                scale(map(ellipseR, 0, (r * 2) - 30, 0, 15) * n);
+                scale(map(ellipseR, 0, (r * 1.85f) - 30, 0, 15) * n);
                 strokeWeight(.2f);
                 stroke(map(n, 0, Float.POSITIVE_INFINITY, 0, 255));
-                fill(255);
+                fill(255);  
                 rect(0, 0, .8f, .4f);
                 popMatrix();
             }
