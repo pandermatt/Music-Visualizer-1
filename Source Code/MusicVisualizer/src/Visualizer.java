@@ -76,8 +76,6 @@ public class Visualizer extends PApplet {
         System.setProperty("sun.java2d.transaccel", "True");
         System.setProperty("sun.java2d.ddforcevram", "True");
         System.setProperty("apple.laf.useScreenMenuBar", "true");
-        System.setProperty("com.apple.macos.use-file-dialog-packages", "true");
-        System.setProperty("apple.awt.fileDialogForDirectories", "true");
     }
 
     public static void main(String[] args) {
