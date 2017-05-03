@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -88,7 +90,6 @@ public class Visualizer extends PApplet {
         surface.setIcon(loadImage(iconImage));
         smooth();
         strokeCap(SQUARE);
-        //rectMode(CENTER);
         noiseDetail(1, 0.95f);
     }
 
@@ -319,14 +320,24 @@ public class Visualizer extends PApplet {
 
     private String fileChooser(String if_null) {
         try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) {EException.append(x);}
-        JFileChooser chooser = new JFileChooser(System.getProperty("user.home") + "/Downloads");
-        JFrame window = new JFrame();
-        window.setIconImage(icon);
-        chooser.setDialogTitle("Choose a song :D");
-        chooser.setFileFilter(new FileNameExtensionFilter(".wav, .mp3", "wav", "mp3"));
-        int returnVal = chooser.showOpenDialog(window);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {return chooser.getSelectedFile().getAbsolutePath();
-        } else return if_null;
+        JFrame frame = new JFrame();
+        frame.setIconImage(icon);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        FileDialog dialog = new FileDialog(frame, "Select", FileDialog.LOAD);
+        dialog.setFilenameFilter((dir, name) -> (name.endsWith(".mp3") || name.endsWith(".wav")));
+        dialog.setFile("*.mp3; *.wav");
+        dialog.show();
+
+        File choice = null;
+        String dir = dialog.getDirectory();
+        String file = dialog.getFile();
+
+        if (dir != null && file != null) {
+            choice = new File(dir, file);
+        }
+
+        if (choice != null) return choice.getAbsolutePath();
+        else return if_null;
     }
 
     private void showBackGround(int step) {
