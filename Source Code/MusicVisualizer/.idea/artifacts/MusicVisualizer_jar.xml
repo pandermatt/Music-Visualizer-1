@@ -24,6 +24,7 @@
       <element id="extracted-dir" path="$USER_HOME$/Desktop/IDE's -Coding/processing-3.3/core/library/gluegen-rt-natives-linux-i586.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Desktop/IDE's -Coding/processing-3.3/core/library/jogl-all-natives-linux-amd64.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Desktop/IDE's -Coding/processing-3.3/core/library/jogl-all-natives-windows-amd64.jar" path-in-jar="/" />
+      <element id="file-copy" path="$PROJECT_DIR$/resources/controlP5/library/controlP5.jar" />
     </root>
   </artifact>
 </component>
