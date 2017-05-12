@@ -1,11 +1,11 @@
 package com.MVisualizer;
 
+import com.MVisualizer.Helpers.KAdapter;
+import com.MVisualizer.Helpers.WAdapter;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -29,11 +29,12 @@ public class EException {
         frame.setIconImage(Visualizer.icon);
         frame.setSize(430, 260);
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent windowEvent) {closeWindow();}});
+        frame.addWindowListener(new WAdapter.WindowClosing(e -> closeWindow()));
         frame.setLocationRelativeTo(parent);
-        frame.addKeyListener(new KeyAdapter() {public void keyReleased(KeyEvent e) {if (e.getKeyCode() == 27) {closeWindow();}
+        frame.addKeyListener(new KAdapter(e->{},e->{
+            if (e.getKeyCode() == KeyEvent.VK_ESCAPE) closeWindow();
             if (e.isControlDown() && (e.getKeyCode() == KeyEvent.VK_C)) {ELOG = "";}
-        }});
+        }));
 
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -44,7 +45,7 @@ public class EException {
         textArea.setDoubleBuffered(true);
         textArea.setDragEnabled(false);
         textArea.setEnabled(false);
-        textArea.setFont(new Font("Arial", Font.ITALIC, 17));
+        textArea.setFont(new Font("Arial", Font.ITALIC, 15));
         textArea.setBackground(Color.BLACK);
         textArea.setForeground(Color.WHITE);
 

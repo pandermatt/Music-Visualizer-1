@@ -1,16 +1,21 @@
 package com.MVisualizer;
 
-import controlP5.*;
+import com.Cipher.SCPack;
+import controlP5.Accordion;
 import controlP5.Button;
+import controlP5.ControlP5;
+import controlP5.Slider;
 import ddf.minim.AudioPlayer;
 import ddf.minim.Minim;
 import ddf.minim.analysis.FFT;
+import de.voidplus.soundcloud.Track;
 import processing.core.PApplet;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -20,12 +25,16 @@ public class Visualizer extends PApplet {
     public static Minim minim;
     public static AudioPlayer player;
     public static ControlP5 cp5;
+    public static SoundCloudWrapper soundCloudApi = null;
 
     //  Ints
     public static int avgSize;
     public static int barStep = 1;
     public static int backgroundstep = 50;
-    public static int buffersize = 512;
+    public static int bufferSize = 512;
+    public static int sampleRate = 44100;
+    public static int minBandwidth = 3000;
+    public static int bandsPerOctave = 200;
     public static int visualMode = 0;
 
     //  Floats
@@ -46,7 +55,7 @@ public class Visualizer extends PApplet {
 
     //  Strings
     public static String iconImage = "logo3.png";
-    public static String music = "Wildfire.mp3";
+    public static String defaultSong = "Wildfire.mp3";
     public static Image icon = Toolkit.getDefaultToolkit().getImage(Visualizer.class.getResource("/" + iconImage));
 
     //  Arrays
@@ -74,12 +83,14 @@ public class Visualizer extends PApplet {
         noiseDetail(1, 0.95f);
 
         cp5 = new ControlP5(this);
-        ControlSetup.setupControls();
+        Controls.setupControls();
     }
 
     public void settings() {
         minim = new Minim(this);
-        ControlSetup.ref = this;
+        Controls.visualizerRef = this;
+        try{initSoundCloud();} catch (Exception e){
+            EException.append(e);}
         setUpPlayer();
         size(1080, 720, JAVA2D);
     }
@@ -99,9 +110,10 @@ public class Visualizer extends PApplet {
 
     private void setUpPlayer() {
         //player = minim.getLineIn();
-        player = minim.loadFile(fileChooser(music), buffersize);
-        fft = new FFT(player.bufferSize(), player.sampleRate());
-        fft.logAverages(3000, 200);
+        player = minim.loadFile(fileChooser(defaultSong), bufferSize);
+        fft = new FFT(bufferSize, sampleRate);
+        fft.logAverages(minBandwidth, bandsPerOctave);
+        fft.window(FFT.HAMMING);
         avgSize = fft.avgSize();
         fftSmooth = new float[avgSize];
         player.play();
@@ -250,8 +262,7 @@ public class Visualizer extends PApplet {
             fill(map(player.position(), 0, player.length(), 0, 255), 255, 255);
             rect(0, 0, posx, 12);
         } catch (Exception e) {
-            EException.append(e);
-        }
+            EException.append(e);}
     }
 
     public void mouseReleased() {
@@ -259,26 +270,32 @@ public class Visualizer extends PApplet {
             if (mouseY >= 0 && mouseY <= 12) {
                 player.cue(((int) map(mouseX, 0, width, 0, player.length())));
             }
-        } catch (Exception e) {EException.append(e);}
+        } catch (Exception e) {
+            EException.append(e);}
     }
 
     public String fileChooser(String if_null) {
-        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) {EException.append(x);}
+        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) {
+            EException.append(x);}
         FileDialog dialog = new FileDialog((Frame) null, "Select", FileDialog.LOAD);
-        dialog.setFilenameFilter((dir, name) -> (name.endsWith(".mp3") || name.endsWith(".wav")));
-        dialog.setFile("*.mp3; *.wav");
-        dialog.show();
+        //dialog.setFilenameFilter((dir, name) -> (name.endsWith(".mp3") || name.endsWith(".wav")));
+        dialog.setFile("*.mp3; *.wav; *.aiff; *.au");
+        dialog.setVisible(true);
 
         File choice = null;
         String dir = dialog.getDirectory();
         String file = dialog.getFile();
 
-        if (dir != null && file != null) {
-            choice = new File(dir, file);
-        }
+        if (dir != null && file != null) choice = new File(dir, file);
 
         if (choice != null) return choice.getAbsolutePath();
         else return if_null;
+    }
+
+    public void initSoundCloud() throws IOException {
+        soundCloudApi = new SoundCloudWrapper(new StringBuilder("h4xVW8Xx30tXHqgTtfUxiXFk2XpTWI8I"),
+                                              new StringBuilder("8tzbr1Q0fFPOre68l9NhAwAXHqTrJO1M"),
+                                     "scloudv1", SCPack.get(this.getClass(), "/k.mvf", "/l.mvf"));
     }
 
     private void showBackGround(int step) {
@@ -319,20 +336,37 @@ public class Visualizer extends PApplet {
     }
 
     public void changeSong(){
-        String filePath = fileChooser(music);
-        if (!filePath.equals(music)) {
+        String newSong = fileChooser(defaultSong);
+        if (!newSong.equals(defaultSong)) {
             player.pause();
-            player = minim.loadFile(filePath, buffersize);
-            fft = new FFT(player.bufferSize(), player.sampleRate());
-            fft.logAverages(3000, 200);
+            player = minim.loadFile(newSong, bufferSize);
+            fft = new FFT(bufferSize, sampleRate);
+            fft.logAverages(minBandwidth, bandsPerOctave);
+            fft.window(FFT.HAMMING);
             avgSize = fft.avgSize();
             fftSmooth = new float[avgSize];
             player.play();
         }
     }
 
-    private boolean toggle(boolean t) {
-        return !t;
+    public void changeSong(Track song){
+        try{
+            if (song != null) {
+                player.pause();
+                player = minim.loadFile(song.getStreamUrl(), bufferSize);
+                fft = new FFT(bufferSize, sampleRate);
+                fft.logAverages(minBandwidth, bandsPerOctave);
+                fft.window(FFT.HAMMING);
+                avgSize = fft.avgSize();
+                fftSmooth = new float[avgSize];
+                player.play();
+            }
+        } catch (Exception e){
+            EException.append(e);}
+    }
+
+    public void showError(String message, String title){
+        JOptionPane.showConfirmDialog(frame, message, title, JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
     }
 
     public void keyReleased() {
@@ -346,7 +380,7 @@ public class Visualizer extends PApplet {
             changeVisual();
         }
 
-        if (keyEvent.isControlDown() && keyEvent.isAltDown()) EException.getInstance(null);
+        if (key == 'z') EException.getInstance(null);
 
         if (keyCode == KeyEvent.VK_SPACE) {
             pausePlayer();
