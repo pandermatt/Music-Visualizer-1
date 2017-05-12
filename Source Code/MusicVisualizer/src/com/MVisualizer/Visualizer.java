@@ -277,8 +277,9 @@ public class Visualizer extends PApplet {
     public String fileChooser(String if_null) {
         try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) {
             EException.append(x);}
+        String[] acceptedTypes = {".mp3", ".wav", ".aiff", ".au"};
         FileDialog dialog = new FileDialog((Frame) null, "Select", FileDialog.LOAD);
-        //dialog.setFilenameFilter((dir, name) -> (name.endsWith(".mp3") || name.endsWith(".wav")));
+        dialog.setFilenameFilter((dir, file) -> isSongCorrectFormat(file, acceptedTypes));
         dialog.setFile("*.mp3; *.wav; *.aiff; *.au");
         dialog.setVisible(true);
 
@@ -363,6 +364,13 @@ public class Visualizer extends PApplet {
             }
         } catch (Exception e){
             EException.append(e);}
+    }
+
+    public boolean isSongCorrectFormat(String file, String[] extensions){
+        for (String extension : extensions) {
+            if (file.endsWith(extension)) return true;
+        }
+        return false;
     }
 
     public void showError(String message, String title){
