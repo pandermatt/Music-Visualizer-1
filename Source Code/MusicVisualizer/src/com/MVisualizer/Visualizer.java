@@ -5,6 +5,7 @@ import controlP5.Accordion;
 import controlP5.Button;
 import controlP5.ControlP5;
 import controlP5.Slider;
+import ddf.minim.AudioInput;
 import ddf.minim.AudioPlayer;
 import ddf.minim.Minim;
 import ddf.minim.analysis.FFT;
@@ -20,7 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Visualizer extends PApplet {
-    //public static AudioInput player;
+//    public static AudioInput player;
     public static FFT fft;
     public static Minim minim;
     public static AudioPlayer player;
@@ -35,6 +36,7 @@ public class Visualizer extends PApplet {
     public static int sampleRate = 44100;
     public static int minBandwidth = 3000;
     public static int bandsPerOctave = 200;
+    public static int transformMode = 0;
     public static int visualMode = 0;
 
     //  Floats
@@ -89,8 +91,7 @@ public class Visualizer extends PApplet {
     public void settings() {
         minim = new Minim(this);
         Controls.visualizerRef = this;
-        try{initSoundCloud();} catch (Exception e){
-            EException.append(e);}
+        try{initSoundCloud();} catch (Exception e){EException.append(e);}
         setUpPlayer();
         size(1080, 720, JAVA2D);
     }
@@ -109,9 +110,10 @@ public class Visualizer extends PApplet {
     }
 
     private void setUpPlayer() {
-        //player = minim.getLineIn();
+//        player = minim.getLineIn();
         player = minim.loadFile(fileChooser(defaultSong), bufferSize);
-        fft = new FFT(bufferSize, sampleRate);
+        fft = new FFT(player.bufferSize(), player.sampleRate());
+//        fft = new FFT(bufferSize, sampleRate);
         fft.logAverages(minBandwidth, bandsPerOctave);
         fft.window(FFT.HAMMING);
         avgSize = fft.avgSize();
@@ -213,7 +215,7 @@ public class Visualizer extends PApplet {
             float amp = maxHeight * (((amplitude * fftSmooth[i]) - minVal) / scaleFactor);
             float y = (height / 2 - 20);
 
-            int c = (int) map(i, 0, fft.specSize(), 0, 285);
+            int c = (int) map(i, 0, fft.specSize(), 0, 275);
             stroke(c, 255, 255);
             strokeWeight(strokeWeight);
             line(x1, y, x2, y + amp);
@@ -237,7 +239,7 @@ public class Visualizer extends PApplet {
             float y1 = -musicTransform(x1) + height / 2;
             float y2 = -musicTransform(x2) + height / 2;
 
-            int c1 = (int) map(i, 0, fft.specSize(), 0, 285);
+            int c1 = (int) map(i, 0, fft.specSize(), 0, 275);
             stroke(c1, 255, 255);
             strokeWeight(strokeWeight);
             line(1.7f * x1, y1 + amp, 1.7f * x2, y2 - amp);
@@ -246,11 +248,20 @@ public class Visualizer extends PApplet {
     }
 
     public float musicTransform(float x) {
-        //float m = 2, a = 325;
-        //return (float) ((m * (x - a) * Math.signum(a - x) + m * a) - height / 2 + (60 * Math.sin(.08f * x + Visualizer.a))); // Triangle Function: http://math.stackexchange.com/questions/544559/is-there-any-equation-for-triangle
-        return (float) (75f * Math.sin(.015 * x + a));
-        //return 20f * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(.04f * x))))))));
-        //return (float) Math.pow(.02 * x, 2);
+        switch (transformMode) {
+            case 0:
+                return (float) (75f * Math.sin(.015 * x + a));
+            case 1:
+                float m = 2, a = 325;
+                return (float) ((m * (x - a) * Math.signum(a - x) + m * a) - height / 2 + (60 * Math.sin(.08f * x + Visualizer.a)));
+            case 2:
+                return 20f * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(2 * sin(.04f * x))))))));
+            case 3:
+                return (float) Math.pow(.02 * x, 2);
+            default:
+                return (float) (75f * Math.sin(.015 * x + Visualizer.a));
+        }
+         // case 1 - Triangle Function: http://math.stackexchange.com/questions/544559/is-there-any-equation-for-triangle
     }
 
     private void showSongTime() {
@@ -321,6 +332,11 @@ public class Visualizer extends PApplet {
         if (visualMode > 3) visualMode = 0;
     }
 
+    public void changeTransform(){
+        transformMode++;
+        if (transformMode > 3) transformMode = 0;
+    }
+
     public void pausePlayer(){
         if (player.isPlaying()) {
             player.pause();
@@ -341,7 +357,7 @@ public class Visualizer extends PApplet {
         if (!newSong.equals(defaultSong)) {
             player.pause();
             player = minim.loadFile(newSong, bufferSize);
-            fft = new FFT(bufferSize, sampleRate);
+            fft = new FFT(player.bufferSize(), player.sampleRate());
             fft.logAverages(minBandwidth, bandsPerOctave);
             fft.window(FFT.HAMMING);
             avgSize = fft.avgSize();
@@ -355,7 +371,7 @@ public class Visualizer extends PApplet {
             if (song != null) {
                 player.pause();
                 player = minim.loadFile(song.getStreamUrl(), bufferSize);
-                fft = new FFT(bufferSize, sampleRate);
+                fft = new FFT(player.bufferSize(), player.sampleRate());
                 fft.logAverages(minBandwidth, bandsPerOctave);
                 fft.window(FFT.HAMMING);
                 avgSize = fft.avgSize();
@@ -379,6 +395,10 @@ public class Visualizer extends PApplet {
 
     public void keyReleased() {
         super.keyReleased();
+
+        if (key == 'c') {
+            changeTransform();
+        }
 
         if (key == 'm') {
             mutePlayer();
