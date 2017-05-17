@@ -11,11 +11,14 @@ import ddf.minim.Minim;
 import ddf.minim.analysis.FFT;
 import de.voidplus.soundcloud.Track;
 import processing.core.PApplet;
+import processing.event.MouseEvent;
+import processing.opengl.PJOGL;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -67,8 +70,8 @@ public class Visualizer extends PApplet {
     public static Accordion accordion;
 
     static {
-        System.setProperty("sun.java2d.transaccel", "True");
-        System.setProperty("sun.java2d.ddforcevram", "True");
+        System.setProperty("sun.java2d.transaccel", "true");
+        System.setProperty("sun.java2d.ddforcevram", "true");
         System.setProperty("apple.laf.useScreenMenuBar", "true");
     }
 
@@ -89,11 +92,19 @@ public class Visualizer extends PApplet {
     }
 
     public void settings() {
+//        PJOGL.setIcon("logo3.png");
         minim = new Minim(this);
         Controls.visualizerRef = this;
         try{initSoundCloud();} catch (Exception e){EException.append(e);}
         setUpPlayer();
-        size(1080, 720, JAVA2D);
+//        size(1080, 720, P2D);
+        size(1080, 845, JAVA2D);
+    }
+
+    public void stop() {
+        player.close();
+        minim.stop();
+        super.stop();
     }
 
     public void draw() {
@@ -285,14 +296,15 @@ public class Visualizer extends PApplet {
             EException.append(e);}
     }
 
-    public String fileChooser(String if_null) {
-        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) {
-            EException.append(x);}
+    public static String fileChooser(String if_null) {
+        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) { EException.append(x);}
         String[] acceptedTypes = {".mp3", ".wav", ".aiff", ".au"};
         FileDialog dialog = new FileDialog((Frame) null, "Select", FileDialog.LOAD);
         dialog.setFilenameFilter((dir, file) -> isSongCorrectFormat(file, acceptedTypes));
         dialog.setFile("*.mp3; *.wav; *.aiff; *.au");
         dialog.setVisible(true);
+
+        //String s = "C:\\Users\\Caleb\\Downloads\\14 - Company (feat. Travi$ Scott).mp3";
 
         File choice = null;
         String dir = dialog.getDirectory();
@@ -300,7 +312,12 @@ public class Visualizer extends PApplet {
 
         if (dir != null && file != null) choice = new File(dir, file);
 
-        if (choice != null) return choice.getAbsolutePath();
+        if (choice != null) {
+            boolean printPath = true;
+            String choicePath = choice.getAbsolutePath();
+            if (printPath) System.out.println(choicePath);
+            return choicePath;
+        }
         else return if_null;
     }
 
@@ -382,7 +399,7 @@ public class Visualizer extends PApplet {
             EException.append(e);}
     }
 
-    public boolean isSongCorrectFormat(String file, String[] extensions){
+    public static boolean isSongCorrectFormat(String file, String[] extensions){
         for (String extension : extensions) {
             if (file.endsWith(extension)) return true;
         }
