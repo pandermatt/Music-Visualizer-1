@@ -36,7 +36,6 @@ public class Visualizer extends PApplet {
     public static int barStep = 1;
     public static int backgroundstep = 50;
     public static int bufferSize = 512;
-    public static int sampleRate = 44100;
     public static int minBandwidth = 3000;
     public static int bandsPerOctave = 200;
     public static int transformMode = 0;
@@ -48,11 +47,14 @@ public class Visualizer extends PApplet {
     public static float cAmplitude = 90;
     public static float ellipseR = 0;
     public static float bassKick = 2.2f;
-    public static float r = 150.0f;
-    public static float strokeWeight = 2.6f;
-    public static float amplitude = 1;
+    public static float circleRadius = 142.0f;
+    public static float strokeWeight = 2.25f;
+    public static float amplitude = 1.5f;
     public static float angOffset = 2.10f;
     public static float a = 0;
+
+    public static float maxDrawHeight = 1.0f;
+    public static float spectrumScaleFactor = 1.0f;
 
     //  Booleans
     public static boolean isPaused = false;
@@ -60,7 +62,6 @@ public class Visualizer extends PApplet {
 
     //  Strings
     public static String iconImage = "logo3.png";
-    public static String defaultSong = "Wildfire.mp3";
     public static Image icon = Toolkit.getDefaultToolkit().getImage(Visualizer.class.getResource("/" + iconImage));
 
     //  Arrays
@@ -92,13 +93,13 @@ public class Visualizer extends PApplet {
     }
 
     public void settings() {
-//        PJOGL.setIcon("logo3.png");
+        //PJOGL.setIcon("logo3.png");
         minim = new Minim(this);
         Controls.visualizerRef = this;
         try{initSoundCloud();} catch (Exception e){EException.append(e);}
         setUpPlayer();
-//        size(1080, 720, P2D);
-        size(1080, 845, JAVA2D);
+        //size(1080, 720, P2D);
+        size(1080, 720, JAVA2D);
     }
 
     public void stop() {
@@ -114,22 +115,30 @@ public class Visualizer extends PApplet {
         showBackGround(backgroundstep);
         showSongTime();
         cAmplitude = lerp(cAmplitude, smoothing * fft.calcAvg(minVal, maxVal), .1f);
-        ellipseR = constrain(cAmplitude * bassKick, 0.1f, r * 65.0f);
+        ellipseR = constrain(cAmplitude * bassKick, 0.1f, circleRadius * 65.0f);
+        smoothPulse();
+        maxDrawHeight = (height / 2) * 0.75f;
+        spectrumScaleFactor = (maxVal - minVal) + 0.00001f;
         visualize();
         //EException.setText(isSongOver()+"");
         //songEnded();
     }
 
     private void setUpPlayer() {
-//        player = minim.getLineIn();
-        player = minim.loadFile(fileChooser(defaultSong), bufferSize);
-        fft = new FFT(player.bufferSize(), player.sampleRate());
-//        fft = new FFT(bufferSize, sampleRate);
-        fft.logAverages(minBandwidth, bandsPerOctave);
-        fft.window(FFT.HAMMING);
-        avgSize = fft.avgSize();
-        fftSmooth = new float[avgSize];
-        player.play();
+        //player = minim.getLineIn();
+
+        String song = fileChooser();
+        if (song != null) {
+            player = minim.loadFile(song, bufferSize);
+            fft = new FFT(player.bufferSize(), player.sampleRate());
+            fft.logAverages(minBandwidth, bandsPerOctave);
+            fft.window(FFT.GAUSS);
+
+            avgSize = fft.avgSize();
+            fftSmooth = new float[avgSize];
+            player.play();
+        }
+        else System.exit(0);
     }
 
     public boolean isSongOver() {return (!isPaused && (player.right.level() <= 0 && player.left.level() <= 0));}
@@ -158,17 +167,10 @@ public class Visualizer extends PApplet {
     }
 
     private void circulerPulse() {
-        smoothPulse();
-        final float maxHeight = (height / 2) * 0.75f;
-
-        // Calculate the total range of smoothed spectrum; this will be used to scale all values to range 0...1
-        final float range = maxVal - minVal;
-        final float scaleFactor = range + 0.00001f; // avoid div. by zero
-
         for (int i = 0; i < avgSize; i += barStep) {
             float angle = i * angOffset * (2 * PI) / avgSize;
-            float fftSmoothDisplay = maxHeight * (((amplitude * fftSmooth[i]) - minVal) / scaleFactor);
-            float rad = r * 2;
+            float fftSmoothDisplay = maxDrawHeight * (((amplitude * fftSmooth[i]) - minVal) / spectrumScaleFactor);
+            float rad = circleRadius * 2;
             float x = rad * cos(angle);
             float y = rad * sin(angle);
             float x2 = (rad + fftSmoothDisplay) * cos(angle) + .85f;
@@ -183,22 +185,15 @@ public class Visualizer extends PApplet {
         }
 
         noStroke();
-        fill(lerp(0, map(ellipseR, 0, (r * 3) - 50, 0, 255), .23f), 255, 255);
+        fill(lerp(0, map(ellipseR, 0, circleRadius * 3 - 50, 0, 255), .23f), 255, 255);
         ellipse(width / 2, height / 2, ellipseR, ellipseR);
     }
 
     private void signal() {
-        final float maxHeight = (height / 2) * 0.75f;
-        smoothPulse();
-
-        // Calculate the total range of smoothed spectrum; this will be used to scale all values to range 0...1
-        final float range = maxVal - minVal;
-        final float scaleFactor = range + 0.00001f; // avoid div. by zero
-
         for (int i = 0; i < avgSize - 1; i += barStep) {
             float x1 = map(i, 0, avgSize, 0, width);
             float x2 = map(i + 1, 0, avgSize, 0, width);
-            float amp = maxHeight * (((amplitude * fftSmooth[i]) - minVal) / scaleFactor);
+            float amp = maxDrawHeight * (((amplitude * fftSmooth[i]) - minVal) / spectrumScaleFactor);
             float y = (height / 2 - 20);
 
             int c = (int) map(i, 0, fft.specSize(), 0, 285);
@@ -209,13 +204,6 @@ public class Visualizer extends PApplet {
     }
 
     private void inverse() {
-        final float maxHeight = (height / 2) * 0.75f;
-        smoothPulse();
-
-        // Calculate the total range of smoothed spectrum; this will be used to scale all values to range 0...1
-        final float range = maxVal - minVal;
-        final float scaleFactor = range + 0.00001f; // avoid div. by zero
-
         for (int i = 0, size = avgSize - 1; i < size; i += barStep) {
             float x1 = map(i, 0, size, 0, width);
             float x2 = map(i + 1, 0, size, 0, width);
@@ -223,7 +211,7 @@ public class Visualizer extends PApplet {
             float x3 = map(i, 0, size, width, 0);
             float x4 = map(i + 1, 0, size, width, 0);
 
-            float amp = maxHeight * (((amplitude * fftSmooth[i]) - minVal) / scaleFactor);
+            float amp = maxDrawHeight * (((amplitude * fftSmooth[i]) - minVal) / spectrumScaleFactor);
             float y = (height / 2 - 20);
 
             int c = (int) map(i, 0, fft.specSize(), 0, 275);
@@ -235,15 +223,8 @@ public class Visualizer extends PApplet {
     }
 
     public void functionMusic() {
-        final float maxHeight = (height / 2) * 0.75f;
-        smoothPulse();
-
-        // Calculate the total range of smoothed spectrum; this will be used to scale all values to range 0...1
-        final float range = maxVal - minVal;
-        final float scaleFactor = range + 0.00001f; // avoid div. by zero
-
         for (int i = 0; i < avgSize - 1; i += barStep) {
-            float amp = maxHeight * (((amplitude * fftSmooth[i]) - minVal) / scaleFactor);
+            float amp = maxDrawHeight * (((amplitude * fftSmooth[i]) - minVal) / spectrumScaleFactor);
 
             float x1 = map(i, 0, avgSize, 0, width);
             float x2 = map(i + 1, 0, avgSize, 0, width);
@@ -289,22 +270,17 @@ public class Visualizer extends PApplet {
 
     public void mouseReleased() {
         try {
-            if (mouseY >= 0 && mouseY <= 12) {
-                player.cue(((int) map(mouseX, 0, width, 0, player.length())));
-            }
-        } catch (Exception e) {
-            EException.append(e);}
+            if (mouseY >= 0 && mouseY <= 12) player.cue(((int) map(mouseX, 0, width, 0, player.length())));
+        } catch (Exception e) {EException.append(e);}
     }
 
-    public static String fileChooser(String if_null) {
-        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) { EException.append(x);}
+    public static String fileChooser() {
+        try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch (Exception x) {EException.append(x);}
         String[] acceptedTypes = {".mp3", ".wav", ".aiff", ".au"};
-        FileDialog dialog = new FileDialog((Frame) null, "Select", FileDialog.LOAD);
+        FileDialog dialog = new FileDialog((Frame) null, "Select Song :D", FileDialog.LOAD);
         dialog.setFilenameFilter((dir, file) -> isSongCorrectFormat(file, acceptedTypes));
         dialog.setFile("*.mp3; *.wav; *.aiff; *.au");
         dialog.setVisible(true);
-
-        //String s = "C:\\Users\\Caleb\\Downloads\\14 - Company (feat. Travi$ Scott).mp3";
 
         File choice = null;
         String dir = dialog.getDirectory();
@@ -313,17 +289,15 @@ public class Visualizer extends PApplet {
         if (dir != null && file != null) choice = new File(dir, file);
 
         if (choice != null) {
-            boolean printPath = true;
-            String choicePath = choice.getAbsolutePath();
-            if (printPath) System.out.println(choicePath);
-            return choicePath;
+            System.out.println(choice.getAbsolutePath());
+            return choice.getAbsolutePath();
         }
-        else return if_null;
+        else return null;
     }
 
     public void initSoundCloud() throws IOException {
-        soundCloudApi = new SoundCloudWrapper(new StringBuilder("h4xVW8Xx30tXHqgTtfUxiXFk2XpTWI8I"),
-                                              new StringBuilder("8tzbr1Q0fFPOre68l9NhAwAXHqTrJO1M"),
+        soundCloudApi = new SoundCloudWrapper("h4xVW8Xx30tXHqgTtfUxiXFk2XpTWI8I",
+                                           "8tzbr1Q0fFPOre68l9NhAwAXHqTrJO1M",
                                      "scloudv1", SCPack.get(this.getClass(), "/k.mvf", "/l.mvf"));
     }
 
@@ -334,7 +308,7 @@ public class Visualizer extends PApplet {
                 pushMatrix();
                 translate(x, y);
                 rotate(TWO_PI * n);
-                scale(map(ellipseR, 0, (r * 1.85f) - 30, 0, 15) * n);
+                scale(map(ellipseR, 0, circleRadius * 1.85f - 30, 0, 15) * n);
                 strokeWeight(.2f);
                 stroke(map(n, 0, Float.POSITIVE_INFINITY, 0, 255));
                 fill(255);
@@ -370,13 +344,16 @@ public class Visualizer extends PApplet {
     }
 
     public void changeSong(){
-        String newSong = fileChooser(defaultSong);
-        if (!newSong.equals(defaultSong)) {
+        String newSong = fileChooser();
+        if (newSong != null) {
             player.pause();
+            player.close();
             player = minim.loadFile(newSong, bufferSize);
+
             fft = new FFT(player.bufferSize(), player.sampleRate());
             fft.logAverages(minBandwidth, bandsPerOctave);
-            fft.window(FFT.HAMMING);
+            fft.window(FFT.GAUSS);
+
             avgSize = fft.avgSize();
             fftSmooth = new float[avgSize];
             player.play();
@@ -387,16 +364,18 @@ public class Visualizer extends PApplet {
         try{
             if (song != null) {
                 player.pause();
+                player.close();
                 player = minim.loadFile(song.getStreamUrl(), bufferSize);
+
                 fft = new FFT(player.bufferSize(), player.sampleRate());
                 fft.logAverages(minBandwidth, bandsPerOctave);
-                fft.window(FFT.HAMMING);
+                fft.window(FFT.GAUSS);
+
                 avgSize = fft.avgSize();
                 fftSmooth = new float[avgSize];
                 player.play();
             }
-        } catch (Exception e){
-            EException.append(e);}
+        } catch (Exception e){EException.append(e);}
     }
 
     public static boolean isSongCorrectFormat(String file, String[] extensions){
