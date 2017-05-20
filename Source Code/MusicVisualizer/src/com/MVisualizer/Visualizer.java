@@ -45,7 +45,7 @@ public class Visualizer extends PApplet {
     public static float circleRadius = 142.0f;
     public static float strokeWeight = 2.25f;
     public static float amplitude = 1.5f;
-    public static float angOffset = 2.10f;
+    public static float angOffset = 1.70f;
     public static float a = 0;
 
     public static float maxDrawHeight = 1.0f;
@@ -253,19 +253,18 @@ public class Visualizer extends PApplet {
 
     private void showSongTime() {
         try {
-            surface.setTitle(String.format("%d X %d -- Song Time: %s", width, height, (new SimpleDateFormat("mm:ss")).format(new Date(player.position()))));
+            surface.setTitle(String.format("Song Time: %s", new SimpleDateFormat("mm:ss").format(new Date(player.position()))));
             float posx = map(player.position(), 0, player.length(), 0, width);
             noStroke();
             colorMode(HSB);
             fill(map(player.position(), 0, player.length(), 0, 255), 255, 255);
             rect(0, 0, posx, 12);
-        } catch (Exception e) {
-            EException.append(e);}
+        } catch (Exception e) {EException.append(e);}
     }
 
     public void mouseReleased() {
         try {
-            if (mouseY >= 0 && mouseY <= 12) player.cue(((int) map(mouseX, 0, width, 0, player.length())));
+            if (mouseY >= 0 && mouseY <= 12) player.cue((int) map(mouseX, 0, width, 0, player.length()));
         } catch (Exception e) {EException.append(e);}
     }
 
@@ -284,7 +283,7 @@ public class Visualizer extends PApplet {
         if (dir != null && file != null) choice = new File(dir, file);
 
         if (choice != null) {
-            System.out.println(choice.getAbsolutePath());
+            //System.out.println(choice.getAbsolutePath());
             return choice.getAbsolutePath();
         }
         else return null;
@@ -299,13 +298,12 @@ public class Visualizer extends PApplet {
     private void showBackGround(int step) {
         for (int x = step; x < width; x += step) {
             for (int y = step; y < height; y += step) {
-                float n = noise((float) (x * 0.005), (float) (y * 0.007), (float) (frameCount * 0.02));
+                float n = noise(x * 0.005f, y * 0.007f, frameCount * 0.02f);
                 pushMatrix();
                 translate(x, y);
                 rotate(TWO_PI * n);
                 scale(map(ellipseR, 0, circleRadius * 1.85f - 30, 0, 15) * n);
                 strokeWeight(.2f);
-                stroke(map(n, 0, Float.POSITIVE_INFINITY, 0, 255));
                 fill(255);
                 rect(0, 0, .8f, .8f);
                 popMatrix();
