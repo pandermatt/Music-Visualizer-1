@@ -27,7 +27,8 @@ public class Visualizer extends PApplet {
     public static SoundCloudWrapper soundCloudApi = null;
 
     //  Ints
-    public static int avgSize;
+    public static int avgSize = 0;
+    public static int fftOffset = 120;
     public static int barStep = 1;
     public static int backgroundstep = 50;
     public static int bufferSize = 512;
@@ -41,11 +42,11 @@ public class Visualizer extends PApplet {
     public static float smoothing = 0.80f;
     public static float cAmplitude = 90;
     public static float ellipseR = 0;
-    public static float bassKick = 2.2f;
-    public static float circleRadius = 142.0f;
+    public static float bassKick = 2.5f;
+    public static float circleRadius = 145.0f;
     public static float strokeWeight = 2.25f;
     public static float amplitude = 1.5f;
-    public static float angOffset = 1.70f;
+    public static float angOffset = 1.0f;
     public static float a = 0;
 
     public static float maxDrawHeight = 1.0f;
@@ -57,6 +58,8 @@ public class Visualizer extends PApplet {
 
     //  Strings
     public static String iconImage = "logo3.png";
+    public static String nameOfSong = "";
+    public static String title = "";
     public static Image icon = Toolkit.getDefaultToolkit().getImage(Visualizer.class.getResource("/" + iconImage));
 
     //  Arrays
@@ -91,7 +94,7 @@ public class Visualizer extends PApplet {
         //PJOGL.setIcon("logo3.png");
         minim = new Minim(this);
         Controls.visualizerRef = this;
-        try{initSoundCloud();} catch (Exception e){EException.append(e);}
+        try{if (URLLoader.hasConnection()) initSoundCloud();} catch (Exception e){EException.append(e);}
         setUpPlayer();
         //size(1080, 720, P2D);
         size(1080, 720, JAVA2D);
@@ -104,16 +107,15 @@ public class Visualizer extends PApplet {
     }
 
     public void draw() {
-        background(0);
         EException.update();
         fft.forward(player.mix);
+
+        background(0);
+        stroke(255);
         showBackGround(backgroundstep);
         showSongTime();
-        cAmplitude = lerp(cAmplitude, smoothing * fft.calcAvg(minVal, maxVal), .1f);
-        ellipseR = constrain(cAmplitude * bassKick, 0.1f, circleRadius * 65.0f);
+
         smoothPulse();
-        maxDrawHeight = (height / 2) * 0.75f;
-        spectrumScaleFactor = (maxVal - minVal) + 0.00001f;
         visualize();
         //EException.setText(isSongOver()+"");
         //songEnded();
@@ -129,8 +131,10 @@ public class Visualizer extends PApplet {
             fft.logAverages(minBandwidth, bandsPerOctave);
             fft.window(FFT.GAUSS);
 
-            avgSize = fft.avgSize();
+            avgSize = fft.avgSize() - fftOffset;
             fftSmooth = new float[avgSize];
+
+            //System.out.println(avgSize);
             player.play();
         }
         else System.exit(0);
@@ -142,6 +146,11 @@ public class Visualizer extends PApplet {
     }
 
     private void visualize() {
+        cAmplitude = lerp(cAmplitude, smoothing * fft.calcAvg(minVal, maxVal), .1f);
+        ellipseR = constrain(cAmplitude * bassKick, 0.1f, circleRadius * 65.0f);
+        maxDrawHeight = (height / 2) * 0.75f;
+        spectrumScaleFactor = (maxVal - minVal) + 0.00001f;
+
         switch (visualMode) {
             case 0: circulerPulse(); break;
             case 1: signal(); break;
@@ -253,7 +262,8 @@ public class Visualizer extends PApplet {
 
     private void showSongTime() {
         try {
-            surface.setTitle(String.format("Song Time: %s", new SimpleDateFormat("mm:ss").format(new Date(player.position()))));
+            title = nameOfSong + " - " + new SimpleDateFormat("mm:ss").format(new Date(player.position()));
+            surface.setTitle(title);
             float posx = map(player.position(), 0, player.length(), 0, width);
             noStroke();
             colorMode(HSB);
@@ -284,6 +294,9 @@ public class Visualizer extends PApplet {
 
         if (choice != null) {
             //System.out.println(choice.getAbsolutePath());
+            StringBuilder t = new StringBuilder(choice.getName());
+            nameOfSong = t.delete(t.indexOf(".mp3"), t.length()).toString();
+            //System.out.println(nameOfSong);
             return choice.getAbsolutePath();
         }
         else return null;
@@ -347,27 +360,25 @@ public class Visualizer extends PApplet {
             fft.logAverages(minBandwidth, bandsPerOctave);
             fft.window(FFT.GAUSS);
 
-            avgSize = fft.avgSize();
-            fftSmooth = new float[avgSize];
             player.play();
         }
     }
 
     public void changeSong(Track song){
         try{
-            if (song != null) {
+            if (song != null && song.isStreamable()) {
                 player.pause();
                 player.close();
                 player = minim.loadFile(song.getStreamUrl(), bufferSize);
+                nameOfSong = song.getTitle();
 
                 fft = new FFT(player.bufferSize(), player.sampleRate());
                 fft.logAverages(minBandwidth, bandsPerOctave);
                 fft.window(FFT.GAUSS);
 
-                avgSize = fft.avgSize();
-                fftSmooth = new float[avgSize];
                 player.play();
             }
+            else showError("Song is not Streamable :( Try another song.", "Non Streamable Link");
         } catch (Exception e){EException.append(e);}
     }
 

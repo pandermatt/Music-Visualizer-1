@@ -8,6 +8,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 import static com.MVisualizer.Visualizer.icon;
 import static com.MVisualizer.Visualizer.soundCloudApi;
@@ -83,7 +85,8 @@ public class URLLoader {
         String requestURL = textField.getText();
 
         if (requestURL != null && !requestURL.isEmpty() && (requestURL.startsWith("http://") || requestURL.startsWith("https://"))) {
-            try {requestedTrack = soundCloudApi.getTrackFromURL(requestURL);
+            try {
+                requestedTrack = soundCloudApi.getTrackFromURL(requestURL);
             } catch (IOException e) {
                 EException.append(e);
                 error = true;
@@ -100,6 +103,27 @@ public class URLLoader {
                 if (!checkBox.isSelected()) close();
             }
         }
+    }
+
+    public static boolean hasConnection(){
+        return checkConnection("www.google.com") || checkConnection("www.yahoo.com");
+    }
+
+    public static boolean checkConnection(String url) {
+        boolean status = false;
+        Socket sock = new Socket();
+        InetSocketAddress address = new InetSocketAddress(url, 80);
+        try {
+            sock.connect(address, 1200);
+            if (sock.isConnected()) status = true;
+        } catch (Exception e) {status = false;}
+
+        finally {
+            try {sock.close();
+            } catch (IOException e) {e.printStackTrace();}
+        }
+
+        return status;
     }
 
     private void addPopup(Component c, JPopupMenu p) {

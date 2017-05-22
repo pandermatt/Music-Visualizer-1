@@ -182,7 +182,7 @@ public class ColorUtility {
 
     /**
      * Return the "distance" between two colors. The rgb entries are taken
-     * to be coordinates in a 3D space [0.0-1.0], and this method returnes
+     * to be coordinates in a 3D space [0.0-1.0], and this method returns
      * the distance between the coordinates for the first and second color.
      *
      * @param r1, g1, b1  First color.
