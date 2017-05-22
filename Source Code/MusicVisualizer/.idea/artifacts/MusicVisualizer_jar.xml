@@ -3,18 +3,14 @@
     <output-path>$PROJECT_DIR$/../../MVisualizer Jar</output-path>
     <root id="archive" name="MusicVisualizer.jar">
       <element id="module-output" name="MusicVisualizer" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/apache-commons-io-2.5/commons-io-2.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/apache-commons-io-2.5/commons-io-2.5-javadoc.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/soundcloud-lib/SCPack.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/soundcloud-lib/gson-2.2.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/soundcloud-lib/json-simple-1.1.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/soundcloud-lib/java-api-wrapper-1.3.0-all.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/soundcloud-lib/soundcloud-0.2.1-jar-with-dependencies.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/controlP5/controlP5.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/minim.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/jl1.0.1.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/jsminim.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/mp3spi1.9.5.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/tritonus_aos.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/tritonus_share.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/processing-core-3.3.3/core.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/processing-core-3.3.3/jogl-all.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/processing-core-3.3.3/gluegen-rt.jar" path-in-jar="/" />
@@ -32,6 +28,12 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/processing-core-3.3.3/gluegen-rt-natives-windows-amd64.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/processing-core-3.3.3/jogl-all-natives-macosx-universal.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/resources/processing-core-3.3.3/gluegen-rt-natives-macosx-universal.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/minim.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/jl1.0.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/jsminim.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/mp3spi1.9.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/tritonus_aos.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/resources/minim/tritonus_share.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

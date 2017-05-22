@@ -54,5 +54,15 @@
         <jarDirectory url="file://$MODULE_DIR$/resources/soundcloud-lib" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/resources/apache-commons-io-2.5" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/resources/apache-commons-io-2.5" recursive="false" />
+      </library>
+    </orderEntry>
   </component>
 </module>

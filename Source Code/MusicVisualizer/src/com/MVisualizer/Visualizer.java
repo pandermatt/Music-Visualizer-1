@@ -9,12 +9,14 @@ import ddf.minim.AudioPlayer;
 import ddf.minim.Minim;
 import ddf.minim.analysis.FFT;
 import de.voidplus.soundcloud.Track;
+import org.apache.commons.io.FilenameUtils;
 import processing.core.PApplet;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -294,8 +296,9 @@ public class Visualizer extends PApplet {
 
         if (choice != null) {
             //System.out.println(choice.getAbsolutePath());
+            String fileExt = FilenameUtils.getExtension(choice.getName());
             StringBuilder t = new StringBuilder(choice.getName());
-            nameOfSong = t.delete(t.indexOf(".mp3"), t.length()).toString();
+            nameOfSong = t.delete(t.indexOf("." + fileExt), t.length()).toString();
             //System.out.println(nameOfSong);
             return choice.getAbsolutePath();
         }
