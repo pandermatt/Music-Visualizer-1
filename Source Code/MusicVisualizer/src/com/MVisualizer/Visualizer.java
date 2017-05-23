@@ -16,7 +16,6 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -26,16 +25,17 @@ public class Visualizer extends PApplet {
     public static Minim minim;
     public static AudioPlayer player;
     public static ControlP5 cp5;
-    public static SoundCloudWrapper soundCloudApi = null;
+    public static ISoundCloud soundCloudApi = null;
 
     //  Ints
     public static int avgSize = 0;
     public static int fftOffset = 120;
     public static int barStep = 1;
     public static int backgroundstep = 50;
-    public static int bufferSize = 512;
-    public static int minBandwidth = 3000;
-    public static int bandsPerOctave = 200;
+    public static int bufferSize = 2048;
+//    public static int bufferSize = 512*2;
+    public static int minBandwidth = 2000;
+    public static int bandsPerOctave = 300;
     public static int transformMode = 0;
     public static int visualMode = 0;
 
@@ -48,7 +48,7 @@ public class Visualizer extends PApplet {
     public static float circleRadius = 145.0f;
     public static float strokeWeight = 2.25f;
     public static float amplitude = 1.5f;
-    public static float angOffset = 1.0f;
+    public static float angOffset = 1.4f;
     public static float a = 0;
 
     public static float maxDrawHeight = 1.0f;
@@ -120,12 +120,9 @@ public class Visualizer extends PApplet {
         smoothPulse();
         visualize();
         //EException.setText(isSongOver()+"");
-        //songEnded();
     }
 
     private void setUpPlayer() {
-        //player = minim.getLineIn();
-
         String song = fileChooser();
         if (song != null) {
             player = minim.loadFile(song, bufferSize);
@@ -174,7 +171,7 @@ public class Visualizer extends PApplet {
 
     private void circulerPulse() {
         for (int i = 0; i < avgSize; i += barStep) {
-            float angle = i * angOffset * (2 * PI) / avgSize;
+            float angle = i * angOffset * 2 * PI / avgSize;
             float fftSmoothDisplay = maxDrawHeight * (((amplitude * fftSmooth[i]) - minVal) / spectrumScaleFactor);
             float rad = circleRadius * 2;
             float x = rad * cos(angle);
@@ -202,7 +199,7 @@ public class Visualizer extends PApplet {
             float amp = maxDrawHeight * (((amplitude * fftSmooth[i]) - minVal) / spectrumScaleFactor);
             float y = (height / 2 - 20);
 
-            int c = (int) map(i, 0, fft.specSize(), 0, 285);
+            float c = map(i, 0, fft.specSize(), 0, 285);
             stroke(c, 255, 255);
             strokeWeight(strokeWeight);
             line(x1, y + amp, x2, y - amp);
@@ -220,7 +217,7 @@ public class Visualizer extends PApplet {
             float amp = maxDrawHeight * (((amplitude * fftSmooth[i]) - minVal) / spectrumScaleFactor);
             float y = (height / 2 - 20);
 
-            int c = (int) map(i, 0, fft.specSize(), 0, 275);
+            float c = map(i, 0, fft.specSize(), 0, 275);
             stroke(c, 255, 255);
             strokeWeight(strokeWeight);
             line(x1, y, x2, y + amp);
@@ -237,7 +234,7 @@ public class Visualizer extends PApplet {
             float y1 = -musicTransform(x1) + height / 2;
             float y2 = -musicTransform(x2) + height / 2;
 
-            int c1 = (int) map(i, 0, fft.specSize(), 0, 275);
+            float c1 = map(i, 0, fft.specSize(), 0, 275);
             stroke(c1, 255, 255);
             strokeWeight(strokeWeight);
             line(1.7f * x1, y1 + amp, 1.7f * x2, y2 - amp);
@@ -306,7 +303,7 @@ public class Visualizer extends PApplet {
     }
 
     public void initSoundCloud() throws IOException {
-        soundCloudApi = new SoundCloudWrapper("h4xVW8Xx30tXHqgTtfUxiXFk2XpTWI8I",
+        soundCloudApi = new ISoundCloud("h4xVW8Xx30tXHqgTtfUxiXFk2XpTWI8I",
                                            "8tzbr1Q0fFPOre68l9NhAwAXHqTrJO1M",
                                      "scloudv1", SCPack.get(this.getClass(), "/k.mvf", "/l.mvf"));
     }
